@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mundo de Corazones</title>
+    <style>
+         :root {
+            --rosa-fondo: #ffc0cb;
+            --rosa-fuerte: #ff69b4;
+            --destello: #fff0f5;
+        }
+        
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--rosa-fondo);
+            font-family: 'Georgia', serif;
+        }
+        /* Contenedor Principal */
+        
+        #main-ui {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            pointer-events: none;
+            /* Deja que los clics pasen a los corazones */
+        }
+        
+        #main-ui * {
+            pointer-events: auto;
+        }
+        
+        h1 {
+            color: #d02090;
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        
+        .poema {
+            font-style: italic;
+            font-size: 1.5rem;
+            color: #8b008b;
+            max-width: 600px;
+            line-height: 1.6;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+        }
+        /* Botones */
+        
+        .btn-pdf {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: var(--rosa-fuerte);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 100;
+        }
+        
+        .btn-audio {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px;
+            background: #d02090;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        /* Visor de PDF */
+        
+        #pdf-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: none;
+            z-index: 200;
+        }
+        
+        .btn-back {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            padding: 10px;
+            background: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        /* Corazones y Partículas */
+        
+        .heart {
+            position: absolute;
+            color: var(--rosa-fuerte);
+            cursor: pointer;
+            user-select: none;
+            animation: fall linear forwards;
+        }
+        
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            animation: explode 3s ease-out forwards;
+        }
+        
+        @keyframes fall {
+            to {
+                transform: translateY(110vh) rotate(360deg);
+            }
+        }
+        
+        @keyframes explode {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes sparkle {
+            0% {
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+                scale: 1.2;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="main-ui">
+        <h1>Bienvenidos a mi rincón</h1>
+        <p class="poema">
+            "Bajo un cielo de seda carmesí,<br> caen los versos que guardé para ti.<br> Cada estallido es un sueño que vuela,<br> en esta danza que el alma revela."
+        </p>
+    </div>
+
+    <button class="btn-pdf" onclick="togglePDF(true)">Ver Documento PDF</button>
+
+    <div id="pdf-overlay">
+        <button class="btn-back" onclick="togglePDF(false)">Volver</button>
+        <embed src="MARLEN.pdf" type="application/pdf" width="100%" height="100%">
+    </div>
+
+    <audio id="miMusica" loop>
+        <source src="Eres tú.mp3" type="audio/mpeg">
+        Tu navegador no soporta audio.
+    </audio>
+    <button class="btn-audio" onclick="togglePlay()">🎵 Play/Pausa</button>
+
+    <script>
+        // --- LÓGICA DE CORAZONES ---
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.innerHTML = '❤';
+            heart.className = 'heart';
+
+            // Posición aleatoria
+            const startX = Math.random() * window.innerWidth;
+            const duration = Math.random() * 3 + 4; // Entre 4 y 7 segundos
+            const size = Math.random() * 20 + 20;
+
+            heart.style.left = startX + 'px';
+            heart.style.top = '-50px';
+            heart.style.fontSize = size + 'px';
+            heart.style.animationDuration = duration + 's';
+
+            // Al hacer clic, explota
+            heart.onclick = (e) => {
+                explode(e.clientX, e.clientY);
+                heart.remove();
+            };
+
+            document.body.appendChild(heart);
+
+            // Limpiar si sale de la pantalla
+            setTimeout(() => {
+                if (heart.parentNode) heart.remove();
+            }, duration * 1000);
+        }
+
+        function explode(x, y) {
+            // Crear mini corazones y destellos
+            for (let i = 0; i < 15; i++) {
+                const p = document.createElement('div');
+                const isSparkle = Math.random() > 0.5;
+
+                p.innerHTML = isSparkle ? '✨' : '❤';
+                p.className = 'particle';
+
+                // Dirección aleatoria de explosión
+                const tx = (Math.random() - 0.5) * 300;
+                const ty = (Math.random() - 0.5) * 300;
+
+                p.style.left = x + 'px';
+                p.style.top = y + 'px';
+                p.style.setProperty('--tx', `${tx}px`);
+                p.style.setProperty('--ty', `${ty}px`);
+                p.style.color = isSparkle ? '#ffffff' : '#ff1493';
+                p.style.fontSize = isSparkle ? '10px' : '15px';
+
+                document.body.appendChild(p);
+
+                // Desaparecen tras 3 segundos (según pedido)
+                setTimeout(() => p.remove(), 3000);
+            }
+        }
+
+        // Generar corazones continuamente
+        setInterval(createHeart, 500);
+
+        // --- LÓGICA DE PDF Y AUDIO ---
+        const musica = document.getElementById('miMusica');
+
+        function togglePlay() {
+            return musica.paused ? musica.play() : musica.pause();
+        }
+
+        function togglePDF(show) {
+            document.getElementById('pdf-overlay').style.display = show ? 'block' : 'none';
+        }
+    </script>
+</body>
+
+</html>
